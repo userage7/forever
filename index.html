@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>❄️ FOREVER · мы не ищем, мы находим</title>
+    <style>
+        /* ===== СБРОС И ОСНОВНАЯ Ч/Б ГАММА ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.5;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* затемнение фона — чисто чёрный, никаких цветов */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 5;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 4rem 1.5rem;
+        }
+
+        /* ===== СНЕЖИНКИ (canvas на весь экран) ===== */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* чтобы не мешали кликать */
+            z-index: 10;
+        }
+
+        /* ===== ПЕРВЫЙ ЭКРАН ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .forever {
+            font-size: clamp(4rem, 18vw, 9rem);
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
+            letter-spacing: 0.25em;
+            margin-bottom: 1.5rem;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { opacity: 0.95; text-shadow: 0 0 5px #fff; }
+            50% { opacity: 1; text-shadow: 0 0 20px #fff; }
+            100% { opacity: 0.95; text-shadow: 0 0 8px #ccc; }
+        }
+
+        .slogan {
+            font-size: clamp(1.2rem, 4vw, 2.2rem);
+            font-weight: 300;
+            color: #ccc;
+            border-top: 2px solid #444;
+            border-bottom: 2px solid #444;
+            padding: 0.9rem 1.5rem;
+            max-width: 800px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            word-spacing: 0.5rem;
+        }
+
+        /* ===== СОСТАВ КЛАНА ===== */
+        .divider {
+            margin: 4rem 0 2rem 0;
+            text-align: center;
+            color: #aaa;
+            font-size: 1.2rem;
+            letter-spacing: 6px;
+        }
+
+        .clan-title {
+            font-size: 2.8rem;
+            font-weight: 400;
+            text-align: center;
+            margin: 1rem 0 2.5rem 0;
+            letter-spacing: 8px;
+            color: #ddd;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .clan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .member-card {
+            background: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border: 1px solid #3a3a3a;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+        }
+
+        .member-card:hover {
+            border-color: #aaa;
+            background: rgba(40, 40, 40, 0.9);
+            transform: scale(1.02);
+        }
+
+        .member-tag {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: white;
+            margin-right: 0.6rem;
+        }
+
+        .member-role {
+            color: #aaa;
+            font-size: 0.9rem;
+            border-left: 1px solid #555;
+            padding-left: 0.7rem;
+        }
+
+        /* ===== НИЖНЯЯ ПОДПИСЬ ===== */
+        .footer-motto {
+            text-align: center;
+            margin-top: 4rem;
+            color: #3f3f3f;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            border-top: 1px dashed #333;
+            padding-top: 2.5rem;
+            text-transform: uppercase;
+        }
+
+        /* адаптация */
+        @media (max-width: 550px) {
+            .hero {
+                min-height: 80vh;
+            }
+            .forever {
+                letter-spacing: 0.15em;
+            }
+            .member-card {
+                padding: 0.8rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Холст для снежинок (JavaScript ниже) -->
+    <canvas id="snowCanvas"></canvas>
+
+    <div class="content">
+        <!-- БЛОК 1: FOREVER + СЛОГАН -->
+        <section class="hero">
+            <div class="forever">FOREVER</div>
+            <div class="slogan">МЫ НЕ ИЩЕМ · МЫ НАХОДИМ</div>
+        </section>
+
+        <!-- РАЗДЕЛИТЕЛЬ -->
+        <div class="divider">✧ ✧ ✧ СОСТАВ КЛАНА ✧ ✧ ✧</div>
+
+        <!-- ЗАГОЛОВОК (можешь изменить, если хочешь другое слово) 
+             но оставлю "CLAN" в ч/б стиле -->
+        <div class="clan-title">✦ FOREVER ✦</div>
+
+        <!-- СЕТКА УЧАСТНИКОВ (полностью по твоему списку) -->
+        <div class="clan-grid">
+            <div class="member-card"><span class="member-tag">@Prins_KM</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@HEPBHOCTb_KF</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@lyovov</span> <span class="member-role">эдитор</span></div>
+            <div class="member-card"><span class="member-tag">@fucksergi</span> <span class="member-role">эдитор, осинтер</span></div>
+            <div class="member-card"><span class="member-tag">@zcopi</span> <span class="member-role">осинтер, сватер</span></div>
+            <div class="member-card"><span class="member-tag">@vip_9777</span> <span class="member-role">осинт снос</span></div>
+            <div class="member-card"><span class="member-tag">@coxese</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@gisinoygas</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@xsowcs</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@Hrusheb</span> <span class="member-role">осинт снос</span></div>
+            <div class="member-card"><span class="member-tag">@KoIya666</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@KARANDAHHEH</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@Prevosxodnaa</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@milver_tag</span> <span class="member-role">осинт, сват</span></div>
+            <div class="member-card"><span class="member-tag">@VkKlea</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@Attack_karatel</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@aweronov</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@fuckfreddy</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@ouexb</span> <span class="member-role">осинт</span></div>
+            <div class="member-card"><span class="member-tag">@FuckLektorov</span> <span class="member-role">осинт</span></div>
+        </div>
+
+        <!-- ЗАВЕРШАЮЩАЯ ФРАЗА (стильная) -->
+        <div class="footer-motto">
+            ❄️ We're not looking · we're finding❄️
+        </div>
+    </div>
+
+    <!-- ========== СКРИПТ СНЕЖИНОК ========== -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('snowCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height;
+            let particles = [];
+
+            function initParticles(count) {
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        radius: Math.random() * 3 + 1,       // размер от 1 до 4
+                        speedY: Math.random() * 1 + 0.5,      // скорость падения
+                        speedX: Math.random() * 0.4 - 0.2,     // лёгкое смещение вбок
+                        opacity: Math.random() * 0.6 + 0.2     // прозрачность
+                    });
+                }
+            }
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                // пересоздаём частицы при изменении размера (примерно 120 снежинок)
+                particles = [];
+                initParticles(130);
+            }
+
+            function drawSnow() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = 'white';
+
+                for (let p of particles) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                    ctx.fill();
+
+                    // движение
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+
+                    // если ушли за нижний край — возвращаем наверх
+                    if (p.y > height + 5) {
+                        p.y = -5;
+                        p.x = Math.random() * width;
+                    }
+                    // если ушли за левый/правый край — аккуратно возвращаем
+                    if (p.x > width + 5) p.x = -5;
+                    if (p.x < -5) p.x = width + 5;
+                }
+
+                requestAnimationFrame(drawSnow);
+            }
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
+
+            // запуск
+            resizeCanvas();
+            drawSnow();
+        })();
+    </script>
+</body>
+</html>
